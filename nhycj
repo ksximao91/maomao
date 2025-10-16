@@ -38,7 +38,7 @@ local function hopServer()
         if #Servers > 0 then
             local randomServer = Servers[math.random(1, #Servers)]
             TeleportService:TeleportToPlaceInstance(game.PlaceId, randomServer.id, LocalPlayer)
-            task.wait(5) -- 等待确保传送请求发出
+            task.wait(5) 
         end
     end
 end
@@ -71,7 +71,6 @@ task.spawn(function()
             hasATM = attackATM()
         end)
         
-        -- 出错或没有ATM就换服
         if not success or not hasATM then
             hopServer()
             break
