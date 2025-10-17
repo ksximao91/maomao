@@ -1,3 +1,4 @@
+--// 服务
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
@@ -12,9 +13,11 @@ local devv = require(ReplicatedStorage.devv)
 local Signal = devv.load("Signal")
 local item = devv.load("v3item")
 
+--// 配置
 local autoatm = true
 local attackInterval = 0.2
 
+--// 获取拳头GUID
 local qtid
 for _, v in next, item.inventory.items do
     if v.name == 'Fists' then
@@ -23,6 +26,7 @@ for _, v in next, item.inventory.items do
     end
 end
 
+--// 自动换服务器（随机优质服务器，玩家数>3）
 local function hopServer()
     local success, result = pcall(function()
         return game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
@@ -38,11 +42,12 @@ local function hopServer()
         if #Servers > 0 then
             local randomServer = Servers[math.random(1, #Servers)]
             TeleportService:TeleportToPlaceInstance(game.PlaceId, randomServer.id, LocalPlayer)
-            task.wait(5) 
+            task.wait(5)
         end
     end
 end
 
+--// 攻击ATM函数
 local function attackATM()
     if not LocalPlayer.Character then return false end
     local rootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -64,13 +69,36 @@ local function attackATM()
     return anyATM
 end
 
+--// 金钱光环逻辑
+task.spawn(function()
+    while task.wait(0.1) do
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        if rootPart then
+            local cashFolder = workspace:FindFirstChild("Game") and workspace.Game:FindFirstChild("Entities") and workspace.Game.Entities:FindFirstChild("CashBundle")
+            if cashFolder then
+                for _, v in pairs(cashFolder:GetDescendants()) do
+                    if v:IsA("ClickDetector") then
+                        local pos = v.Parent:GetPivot().Position
+                        if (rootPart.Position - pos).Magnitude <= 35 then
+                            fireclickdetector(v)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+--// 主循环
 task.spawn(function()
     while autoatm do
         local hasATM = false
         local success, result = pcall(function()
             hasATM = attackATM()
         end)
-        
+
+        -- 没有ATM或出错就换服
         if not success or not hasATM then
             hopServer()
             break
